@@ -14,12 +14,25 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late List<dynamic> fields = [];
-
-  get favorites => null;
+  var favorites = <int>[];
 
   @override
   Widget build(BuildContext context) {
-    var state = MyAppState();
+    void toggleFavorite(int id) {
+      if (favorites.contains(id)) {
+        favorites.remove(id);
+      } else {
+        favorites.add(id);
+      }
+    }
+
+    Widget setIcon(id) {
+      if (favorites.contains(id)) {
+        return Icon(Icons.favorite) as Widget;
+      } else {
+        return Icon(Icons.favorite_border) as Widget;
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text("PopularMovies"), actions: [
@@ -36,120 +49,101 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Text("WISHLIST"),
         ),
         PopupMenuButton(
-            //icon: Icon(Icons.more_vert),
+          //icon: Icon(Icons.more_vert),
             icon: Icon(Icons.sort),
             itemBuilder: (context) => [
-                  PopupMenuItem(
-                    child: Text("Top Rated"),
-                    onTap: () {
-                      setState(() {
-                        fields.sort(
+              PopupMenuItem(
+                child: Text("Top Rated"),
+                onTap: () {
+                  setState(() {
+                    fields.sort(
                             (a, b) => a.voteAverage.compareTo(b.voteAverage));
-                      });
-                    },
-                  ),
-                  PopupMenuItem(
-                    child: Text("Popularity"),
-                    onTap: () {
-                      setState(() {
-                        fields.sort(
+                  });
+                },
+              ),
+              PopupMenuItem(
+                child: Text("Popularity"),
+                onTap: () {
+                  setState(() {
+                    fields.sort(
                             (a, b) => a.popularity.compareTo(b.popularity));
-                      });
-                    },
-                  ),
-                ])
+                  });
+                },
+              ),
+            ])
       ]),
       body: SafeArea(
           child: FutureBuilder<
               dartz.Either<PopularMoviesError, PopularMoviesSuccess>>(
-        future: PopularMoviesAPI.api.fetchPopularMovies(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            dartz.Either<PopularMoviesError, PopularMoviesSuccess> either =
+            future: PopularMoviesAPI.api.fetchPopularMovies(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                dartz.Either<PopularMoviesError, PopularMoviesSuccess> either =
                 snapshot.data!;
-            if (fields.isEmpty) {
-              either.fold((l) => null, (r) => fields = r.results!);
-            }
-            return either.fold(
-              (l) => Center(child: Text(l.statusMessage!)),
-              (r) => GridView.builder(
-                itemCount: fields.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, mainAxisExtent: 300),
-                itemBuilder: (context, index) => InkWell(
-                  onTap: () => Navigator.pushNamed(context, '/MovieScreen',
-                      arguments: fields[index].id),
-                  child: Center(
-                    child: FillImageCard(
-                      height: 350,
-                      contentPadding: const EdgeInsets.only(bottom: 3),
-                      width: 175,
-                      heightImage: 190,
-                      imageProvider: NetworkImage(
-                        "http://image.tmdb.org/t/p/w500${fields[index].posterPath!}",
-                      ),
-                      title: Text(fields[index].originalTitle!),
-                      description: Text(fields[index].releaseDate!),
-                      footer: Row(children: [
-                        Row(
-                          children: [
-                            Text(fields[index].voteAverage!.toString()),
-                            const Icon(Icons.star, size: 15),
-                          ],
-                        ),
-                        const SizedBox(
-                          width: 94,
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: state.setIcon(fields[index].id),
-                              iconSize: 20,
-                              color: Colors.purple,
-                              onPressed: () {
-                                state.toggleFavorite(fields[index].id);
-                              },
+                if (fields.isEmpty) {
+                  either.fold((l) => null, (r) => fields = r.results!);
+                }
+                return either.fold(
+                      (l) => Center(child: Text(l.statusMessage!)),
+                      (r) => GridView.builder(
+                    itemCount: fields.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, mainAxisExtent: 300),
+                    itemBuilder: (context, index) => InkWell(
+                      onTap: () => Navigator.pushNamed(context, '/MovieScreen',
+                          arguments: fields[index].id),
+                      child: Center(
+                        child: FillImageCard(
+                          height: 350,
+                          contentPadding: const EdgeInsets.only(bottom: 3),
+                          width: 175,
+                          heightImage: 190,
+                          imageProvider: NetworkImage(
+                            "http://image.tmdb.org/t/p/w500${fields[index].posterPath!}",
+                          ),
+                          title: Text(fields[index].originalTitle!),
+                          description: Text(fields[index].releaseDate!),
+                          footer: Row(children: [
+                            Row(
+                              children: [
+                                Text(fields[index].voteAverage!.toString()),
+                                const Icon(Icons.star, size: 15),
+                              ],
                             ),
-                          ],
+                            const SizedBox(
+                              width: 94,
+                            ),
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: setIcon(fields[index].id),
+                                  iconSize: 20,
+                                  color: Colors.purple,
+                                  onPressed: () {
+                                    setState(() {
+                                      toggleFavorite(fields[index].id);
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ]),
                         ),
-                      ]),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text("API error: ${snapshot.error.toString()}"),
-            );
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        },
-      )),
+                );
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Text("API error: ${snapshot.error.toString()}"),
+                );
+              } else {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+            },
+          )),
     );
-  }
-}
-
-class MyAppState extends ChangeNotifier {
-  var favorites = <int>[];
-
-  void toggleFavorite(int id) {
-    if (favorites.contains(id)) {
-      favorites.remove(id);
-    } else {
-      favorites.add(id);
-    }
-    notifyListeners();
-  }
-
-  Widget setIcon(id) {
-    if (favorites.contains(id)) {
-      return Icon(Icons.favorite) as Widget;
-    } else {
-      return Icon(Icons.favorite_border) as Widget;
-    }
   }
 }
