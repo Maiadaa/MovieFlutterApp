@@ -81,90 +81,99 @@ class _MyHomePageState extends State<MyHomePage> {
                     ])
           ]),
       body: SafeArea(
-          child: FutureBuilder<
-              dartz.Either<PopularMoviesError, PopularMoviesSuccess>>(
+          child: Container(
+            padding: EdgeInsets.only(top: 25),
+            child: FutureBuilder<
+                dartz.Either<PopularMoviesError, PopularMoviesSuccess>>(
         future: PopularMoviesAPI.api.fetchPopularMovies(),
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            dartz.Either<PopularMoviesError, PopularMoviesSuccess> either =
-                snapshot.data!;
-            if (fields.isEmpty) {
-              either.fold((l) => null, (r) => fields = r.results!);
-            }
-            return either.fold(
-              (l) => Center(child: Text(l.statusMessage!)),
-              (r) => GridView.builder(
-                itemCount: fields.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, mainAxisExtent: 300),
-                itemBuilder: (context, index) => InkWell(
-                  onTap: () => Navigator.pushNamed(context, '/MovieScreen',
-                      arguments: fields[index].id),
-                  child: Center(
-                    child: FillImageCard(
-                      height: 350,
-                      contentPadding: const EdgeInsets.only(bottom: 3),
-                      width: 175,
-                      heightImage: 190,
-                      imageProvider: NetworkImage(
-                        "http://image.tmdb.org/t/p/w500${fields[index].posterPath!}",
-                      ),
-                      title: Container(
-                          padding: EdgeInsets.only(
-                            left: 20,
+            if (snapshot.hasData) {
+              dartz.Either<PopularMoviesError, PopularMoviesSuccess> either =
+                  snapshot.data!;
+              if (fields.isEmpty) {
+                either.fold((l) => null, (r) => {
+                  r.results!.forEach((element) {
+                    if(element.originalLanguage == "en"){
+                      fields.add(element);
+                    }
+                  })
+                });
+              }
+              return either.fold(
+                (l) => Center(child: Text(l.statusMessage!)),
+                (r) => GridView.builder(
+                  itemCount: fields.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2, mainAxisExtent: 300),
+                  itemBuilder: (context, index) => InkWell(
+                    onTap: () => Navigator.pushNamed(context, '/MovieScreen',
+                        arguments: fields[index].id),
+                    child: Center(
+                      child: FillImageCard(
+                        height: 350,
+                        contentPadding: const EdgeInsets.only(bottom: 3),
+                        width: 175,
+                        heightImage: 190,
+                        imageProvider: NetworkImage(
+                          "http://image.tmdb.org/t/p/w500${fields[index].posterPath!}",
+                        ),
+                        title: Container(
+                            padding: EdgeInsets.only(left: 20,),
+                            child: Text(fields[index].originalTitle!)),
+                        description: Container(
+                          padding: EdgeInsets.only(left: 20),
+                          child:Text(fields[index].releaseDate!)
+                        ),
+                        footer: Row(children: [
+                          Container(
+                            padding: EdgeInsets.only(left: 20),
+                            child: Row(
+                              children: [
+
+                                Text(fields[index].voteAverage!.toString()),
+                                const Icon(Icons.star, size: 15),
+                              ],
+                            ),
                           ),
-                          child: Text(fields[index].originalTitle!)),
-                      description: Container(
-                          padding: EdgeInsets.only(left: 20),
-                          child: Text(fields[index].releaseDate!)),
-                      footer: Row(children: [
-                        Container(
-                          padding: EdgeInsets.only(left: 20),
-                          child: Row(
+                          const SizedBox(
+                            width: 74 ,
+                          ),
+                          Row(
                             children: [
-                              Text(fields[index].voteAverage!.toString()),
-                              const Icon(Icons.star, size: 15),
+                              IconButton(
+                                icon: setIcon(fields[index].id),
+                                iconSize: 20,
+                                color: Colors.pink,
+                                onPressed: () {
+                                  setState(() {
+                                    toggleFavorite(
+                                        fields[index].id,
+                                        fields[index].title,
+                                        fields[index].releaseDate,
+                                        fields[index].posterPath);
+                                  });
+                                },
+                              ),
                             ],
                           ),
-                        ),
-                        const SizedBox(
-                          width: 74,
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: setIcon(fields[index].id),
-                              iconSize: 20,
-                              color: Colors.pink,
-                              onPressed: () {
-                                setState(() {
-                                  toggleFavorite(
-                                      fields[index].id,
-                                      fields[index].title,
-                                      fields[index].releaseDate,
-                                      fields[index].posterPath);
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ]),
+                        ]),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text("API error: ${snapshot.error.toString()}"),
-            );
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+              );
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text("API error: ${snapshot.error.toString()}"),
+              );
+            } else {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
         },
-      )),
+      ),
+          )),
     );
   }
 }

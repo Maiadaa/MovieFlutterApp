@@ -1,4 +1,5 @@
 class MovieDetailsSuccess {
+  bool? faved;
   bool? adult;
   String? backdropPath;
   BelongsToCollection? belongsToCollection;
