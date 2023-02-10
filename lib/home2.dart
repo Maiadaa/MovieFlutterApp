@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:dartz/dartz.dart' as dartz;
 import 'package:day8/PopularMoviesAPI.dart';
 import 'package:day8/model/PopularMoviesError.dart';
@@ -13,15 +15,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late List<dynamic> fields;
-  get either => null;
-
-
-  @override
-  void initState() {
-    super.initState();
-    fields = getMoviesData();
-  }
+  late List<dynamic> fields = [];
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +65,9 @@ class _MyHomePageState extends State<MyHomePage> {
           if (snapshot.hasData) {
             dartz.Either<PopularMoviesError, PopularMoviesSuccess> either =
                 snapshot.data!;
+            if(fields.isEmpty) {
+              either.fold((l) => null, (r) => fields = r.results!);
+            }
             return either.fold(
               (l) => Center(child: Text(l.statusMessage!)),
               (r) => GridView.builder(
@@ -130,8 +127,5 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  List<dynamic> getMoviesData() {
-    either.fold((l) => null, (r) => fields = r.results!);
-    return fields;
-  }
+
 }
