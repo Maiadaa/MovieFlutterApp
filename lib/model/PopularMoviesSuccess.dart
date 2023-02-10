@@ -76,7 +76,8 @@ class Results {
     releaseDate = json['release_date'];
     title = json['title'];
     video = json['video'];
-    voteAverage = 3.6;
+    //voteAverage = json['vote_average'];
+    voteAverage = double.parse(json['vote_average'].toStringAsFixed(2));
     voteCount = json['vote_count'];
   }
 
