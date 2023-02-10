@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:dartz/dartz.dart' as dartz;
 import 'package:day8/PopularMoviesAPI.dart';
 import 'package:day8/model/PopularMoviesError.dart';
@@ -17,8 +15,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late List<dynamic> fields = [];
 
+  get favorites => null;
+
   @override
   Widget build(BuildContext context) {
+    var state = MyAppState();
+
     return Scaffold(
       appBar: AppBar(title: Text("PopularMovies"), actions: [
         TextButton(
@@ -65,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
           if (snapshot.hasData) {
             dartz.Either<PopularMoviesError, PopularMoviesSuccess> either =
                 snapshot.data!;
-            if(fields.isEmpty) {
+            if (fields.isEmpty) {
               either.fold((l) => null, (r) => fields = r.results!);
             }
             return either.fold(
@@ -82,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       height: 350,
                       contentPadding: const EdgeInsets.only(bottom: 3),
                       width: 175,
-                      heightImage: 200,
+                      heightImage: 190,
                       imageProvider: NetworkImage(
                         "http://image.tmdb.org/t/p/w500${fields[index].posterPath!}",
                       ),
@@ -96,14 +98,17 @@ class _MyHomePageState extends State<MyHomePage> {
                           ],
                         ),
                         const SizedBox(
-                          width: 110,
+                          width: 94,
                         ),
                         Row(
-                          children: const [
-                            Icon(
-                              Icons.favorite_border,
-                              size: 25,
+                          children: [
+                            IconButton(
+                              icon: state.setIcon(fields[index].id),
+                              iconSize: 20,
                               color: Colors.purple,
+                              onPressed: () {
+                                state.toggleFavorite(fields[index].id);
+                              },
                             ),
                           ],
                         ),
@@ -126,6 +131,25 @@ class _MyHomePageState extends State<MyHomePage> {
       )),
     );
   }
+}
 
+class MyAppState extends ChangeNotifier {
+  var favorites = <int>[];
 
+  void toggleFavorite(int id) {
+    if (favorites.contains(id)) {
+      favorites.remove(id);
+    } else {
+      favorites.add(id);
+    }
+    notifyListeners();
+  }
+
+  Widget setIcon(id) {
+    if (favorites.contains(id)) {
+      return Icon(Icons.favorite) as Widget;
+    } else {
+      return Icon(Icons.favorite_border) as Widget;
+    }
+  }
 }
